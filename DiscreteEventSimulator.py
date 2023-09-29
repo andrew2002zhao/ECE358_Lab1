@@ -1,4 +1,5 @@
 from math import log,e
+import numpy as np
 from numpy.random import uniform
 from numpy import array, vectorize
 import heapq
@@ -10,11 +11,6 @@ NUM_SAMPLE = 1000
 class DiscreteEventSimulator:
     
   
-    
-
-
-    
-
 
     class Event:
         class EventType(Enum):
@@ -107,12 +103,14 @@ class DiscreteEventSimulator:
 
         arrival_times = self.simulateExponential(rate)
         # @orson we need a prefix sum here not the base time
+        arrival_times = np.cumsum(arrival_times)
         self.arrival_events = [ self.ArrivalEvent(arrival_time=x) for x in arrival_times]
-
+        
         # generate observer events 5*rate 
 
         observer_times = self.simulateExponential(5*rate)
         # @orson we need a prefix sum here not the base time
+        observer_times = np.cumsum(observer_times)
         self.observer_events = [ self.ObserverEvent(observer_time=x) for x in observer_times]
 
         # we will not be able to use the future_events_heap as python does
@@ -182,7 +180,7 @@ class DiscreteEventSimulator:
                     print("departure event")
                     simulation_time += 1
 
-        
+            print("arrival_events", arrival_event_pointer, "observer_events", observer_event_pointer)
 
 
 
