@@ -1,6 +1,7 @@
 from math import log,e
 from numpy.random import uniform
 from numpy import array, vectorize
+import heapq
 
 from enum import Enum
 
@@ -18,20 +19,24 @@ class DiscreteEventSimulator:
     class Event:
         def __init__(self):
             self.event_type = None
+            self.nominal_sim_time = None # used for sorting events
 
     class ArrivalEvent(Event):
 
-        def __init__(self, arrival_time, packet_length, service_time):
+        def __init__(self, arrival_time, packet_length=None, service_time=None):
             super().__init__()
+            # should we add a flag to check if arrival packet is dropped or not?? @drew
             self.arrival_time = arrival_time
             self.packet_length = packet_length
             self.service_time = service_time
 
             self.event_type = self.EventType.ARRIVAL
 
+            self.nominal_sim_time = arrival_time
+
     class DepartureEvent(Event):
 
-        def __init__(self, departure_time, transmission_time, is_queue_idle, packet_length):
+        def __init__(self, departure_time, transmission_time=None, is_queue_idle=None, packet_length=None):
             super().__init__()
             self.departure_time = departure_time
             self.transmission_time = transmission_time
@@ -40,15 +45,20 @@ class DiscreteEventSimulator:
 
             self.event_type = self.EventType.DEPARTURE
 
+            self.nominal_sim_time = departure_time
+
     class ObserverEvent(Event):
         
-        def __init__(self, time_average_packets, average_packets_in_queue, packet_length):
+        def __init__(self, observer_time, time_average_packets=None, average_packets_in_queue=None, proportion_idle=None, proportion_loss=None):
             super().__init__()
             self.time_average_packets = time_average_packets
             self.average_packets_in_queue = average_packets_in_queue
-            self.packet_length = packet_length
+            self.proportion_idle = proportion_idle
+            self.proportion_loss = proportion_loss
 
             self.event_type = self.EventType.OBSERVER
+
+            self.nominal_sim_time = observer_time
 
             
     class Packet:
@@ -70,7 +80,9 @@ class DiscreteEventSimulator:
         def append(evet):
             pass
 
-    def __init__(self):
+    def __init__(self, rate):
+
+        self.rate = rate
 
         self.number_of_packet_arrivals = 0
         self.number_of_packet_departures = 0
@@ -83,7 +95,18 @@ class DiscreteEventSimulator:
 
         # generate our incoming packet events 
 
+        arrival_times = simulateExponential(rate).sort()
+        arrival_events = [ self.ArrivalEvent(arrival_time=x) for x in arrival_times]
+
         # generate observer events 5*rate 
+
+        observer_times = simulateExponential(5*rate).sort()
+        observer_events = [ self.ObserverEvent(observer_time=x) for x in observer_times]
+
+        # we will not be able to use the future_events_heap as python does
+        # not allow this - we will have to use the compare the observer_times, 
+        # arrival_times, and departure times and pick the min of the three
+
 
 
 
