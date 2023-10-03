@@ -284,7 +284,7 @@ class DiscreteEventSimulator:
                     departure_event_queue.append(d_event)
                 #############################################################################################
                 
-                # get next event
+                # get next event 
                 next_event = getNextEvent(
                                 self.arrival_events[arrival_event_pointer],
                                 self.observer_events[observer_event_pointer],
@@ -296,19 +296,20 @@ class DiscreteEventSimulator:
                     print("Arrival Event")
                     # add packet to the queue
                     packet_queue.add_packet(packet=packet, nominal_sim_time=next_event.nominal_sim_time)
-                    arrival_event_pointer += 1
+                    arrival_event_pointer = arrival_event_pointer + 1 if arrival_event_pointer < len(self.arrival_events)-1 else arrival_event_pointer
                     simulation_time = next_event.nominal_sim_time 
                 elif(isinstance(next_event, self.ObserverEvent)):
                     print("observer event")
                     # get queue statistics - this will be used to help us graph
                     E_n, P_i, P_l, rho = packet_queue.queue_observe(nominal_sim_time=next_event.nominal_sim_time)
-                    observer_event_pointer += 1
+                    print("E[N]: {}, P_idle: {}, P_loss: {}, rho: {}".format(E_n, P_i, P_l, rho))
+                    observer_event_pointer = observer_event_pointer + 1 if observer_event_pointer < len(self.observer_events)-1 else observer_event_pointer
                     simulation_time = next_event.nominal_sim_time
                 elif(isinstance(next_event, self.DepartureEvent)):
                     print("departure event")
                     # remove packet from queue
                     packet_queue.remove_packet(nominal_sim_time=next_event.nominal_sim_time)
-                    departure_event_pointer += 1
+                    departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                     simulation_time = next_event.nominal_sim_time
 
             print("arrival_events", arrival_event_pointer, "observer_events", observer_event_pointer)
