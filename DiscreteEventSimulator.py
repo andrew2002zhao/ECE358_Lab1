@@ -122,7 +122,10 @@ class DiscreteEventSimulator:
                 if len(self.packet_queue) == 1:
                     self.start_duration = nominal_sim_time
 
-                return self.packet_queue.pop(SupportsIndex=0) # maybe use a deque here 
+                packet_to_return = self.packet_queue[0]
+                del self.packet_queue[0]
+
+                return packet_to_return # maybe use a deque here 
             
             
         def is_queue_empty(self):
@@ -132,7 +135,7 @@ class DiscreteEventSimulator:
             # observe elements in the queue
             # average number of packets in queue over current duration of nominal_sim_time, 
             # and time queue is empty over current duration of nominal_sim_time, and Packet dropped ratio
-            return self._running_time_average(nominal_sim_time), self._running_queue_empty_time(nominal_sim_time), self._running_dropped_packet_ratio(), 1-self._running_queue_empty_time()
+            return self._running_time_average(nominal_sim_time), self._running_queue_empty_time(nominal_sim_time), self._running_dropped_packet_ratio(), 1-self._running_queue_empty_time(nominal_sim_time)
         
 
         # returns the current running time average of elements in the queue
@@ -236,11 +239,10 @@ class DiscreteEventSimulator:
     # is_finite to determine if we are using M/M/K or M/M/1 queue
     def runSimulation(self, t_seconds, is_finite=False, capacity=None, transmission_rate=10e6):
 
-
-
         def getNextEvent(arrivalEvent, observerEvent, departureEvent):
             # Andrew put events in event recorder - to just log events - super simple task 
             # add
+
             if(arrivalEvent.nominal_sim_time < observerEvent.nominal_sim_time and arrivalEvent.nominal_sim_time < departureEvent.nominal_sim_time):
                 return arrivalEvent
             if(observerEvent.nominal_sim_time < departureEvent.nominal_sim_time):
@@ -273,12 +275,12 @@ class DiscreteEventSimulator:
                 #############################################################################################
                 if packet_queue.is_queue_empty():
                     # current arrival time + L/R
-                    d_event = self.DepartureEvent(departure_time=float(self.arrival_events[arrival_event_pointer] + float(packet/transmission_rate)))
+                    d_event = self.DepartureEvent(departure_time=float(self.arrival_events[arrival_event_pointer].arrival_time + float(packet/transmission_rate)))
                     departure_event_queue.append(d_event)
                 else:
                     # last element add to queue + L/R
                     # Andrew can we ever reach the case where there is nothing in the departure queue?
-                    d_event = self.DepartureEvent(departure_time=float(departure_event_queue[-1] + float(packet/transmission_rate)))
+                    d_event = self.DepartureEvent(departure_time=float(departure_event_queue[-1].departure_time + float(packet/transmission_rate)))
                     departure_event_queue.append(d_event)
                 #############################################################################################
                 
