@@ -96,6 +96,7 @@ class DiscreteEventSimulator:
             # logic to determine queue empty time
             if self.is_queue_empty():
                 self.end_duration = nominal_sim_time
+                self.queue_empty_time = self.queue_empty_time + (self.end_duration - self.start_duration)
            
 
             self.packet_queue.append(packet)
@@ -117,16 +118,17 @@ class DiscreteEventSimulator:
         
         def queue_observe(self, nominal_sim_time):
             # observe elements in the queue
-            # average number of packets in queue, and time queue is empty
-            
-            return self._running_time_average(nominal_sim_time), self.is_queue_empty()
+            # average number of packets in queue over current duration of nominal_sim_time, 
+            # and time queue is empty over current duration of nominal_sim_time
+            return self._running_time_average(nominal_sim_time), self._running_queue_empty_time(nominal_sim_time)
         
 
         def _running_time_average(self, nominal_sim_time):
             return float(self.packet_counter/nominal_sim_time)
         
-        def _running_time_queue_empty(self):
-            pass
+        def _running_queue_empty_time(self, nominal_sim_time):
+            return float(self.queue_empty_time/nominal_sim_time)
+        
         # create is full function for M/M/K queue - compare capacity to queue count
 
 
@@ -249,7 +251,7 @@ class DiscreteEventSimulator:
                 if(isinstance(next_event, self.ArrivalEvent)):
                     # we have an arrival event
                     print("Arrival Event")
-                    packet_arrival(packet_queue, self.getPacketLength())
+                    packet_arrival(packet_queue, next_event.nominal_sim_time ,self.getPacketLength())
                     arrival_event_pointer += 1
                     simulation_time += 1 #andrew shouldn't we augment simulation time by the event.nominal_sim_time ???
                 elif(isinstance(next_event, self.ObserverEvent)):
@@ -259,7 +261,7 @@ class DiscreteEventSimulator:
                     simulation_time += 1
                 elif(isinstance(next_event, self.DepartureEvent)):
                     print("departure event")
-                    packet_departure(packet_queue)
+                    packet_departure(packet_queue, next_event.nominal_sim_time)
                     simulation_time += 1
 
             print("arrival_events", arrival_event_pointer, "observer_events", observer_event_pointer)
