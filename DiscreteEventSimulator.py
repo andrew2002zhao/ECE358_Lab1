@@ -387,13 +387,52 @@ def exponentialRateParameter(rho, average_length=2000, transmission_rate=10e6):
 # print(exp75)
 # print(exp75.mean(), exp75.var())
 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+
+import matplotlib
+matplotlib.use('Agg')
+
+
+def plot_single_graph(x, y, plot_title, x_title, y_title):
+    plt.figure()
+    plt.clf()
+
+    plt.title(plot_title)
+    plt.xlabel(x_title)
+    plt.ylabel(y_title)
+    plt.plot(x, y, 'bo-')
+
+    #pdf = PdfPages(plot_title)
+    plt.savefig(plot_title + '.pdf')
+    plt.show()
+    #pdf.close()
+
+
+E_n = []
+P_idle = []
+P_loss = []
+rho = []
+
 x = 0.25
 while x < 0.95:
     rate = exponentialRateParameter(rho=x)
     discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=100)
     discreteEventSimulator.runSimulation(transmission_rate=10e6)
     print("#################################")
-    print("rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))  
+    print("rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))
+
+    rho.append(x)
+    E_n.append(discreteEventSimulator.E_n)
+    P_idle.append(discreteEventSimulator.P_i)  
     print("#################################")
   
     x += 0.1
+
+plt.figure()
+
+plt.title("Average packets vs Rho")
+plt.xlabel("rho")
+plt.ylabel("E[N]")
+plt.plot(rho, E_n, 'bo-')
+plt.show()
