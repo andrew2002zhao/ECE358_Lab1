@@ -266,7 +266,7 @@ class DiscreteEventSimulator:
         U = uniform(low=0.0, high=1.0, size=1)
 
         result = float(-(1/rate)*_ln(1-U))
-        print("exponentially distributed packet length:", result)
+        #print("exponentially distributed packet length:", result)
         return result
         
     # is_finite to determine if we are using M/M/K or M/M/1 queue
@@ -332,7 +332,7 @@ class DiscreteEventSimulator:
                     # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
             
                 # we have an arrival event
-                print("Arrival Event {}".format(next_event.nominal_sim_time))
+                #print("Arrival Event {}".format(next_event.nominal_sim_time))
                 # add packet to the queue
                 packet_queue.add_packet(packet=packet)
                 arrival_event_pointer = arrival_event_pointer + 1 if arrival_event_pointer < len(self.arrival_events)-1 else arrival_event_pointer
@@ -340,14 +340,14 @@ class DiscreteEventSimulator:
             
                 
             elif(isinstance(next_event, self.ObserverEvent)):
-                print("observer event; {}".format(next_event.nominal_sim_time))
+                #print("observer event; {}".format(next_event.nominal_sim_time))
                 # get queue statistics - this will be used to help us graph
                 self.E_n, self.P_i, self.P_l = packet_queue.queue_observe(observer_event_count=observer_event_pointer)
-                print("E[N]: {}, P_idle: {}, P_loss: {}".format(E_n, P_i, P_l))
+                #print("E[N]: {}, P_idle: {}, P_loss: {}".format(self.E_n, self.P_i, self.P_l))
                 observer_event_pointer = observer_event_pointer + 1 if observer_event_pointer < len(self.observer_events)-1 else observer_event_pointer
                 simulation_time = next_event.nominal_sim_time
             elif(isinstance(next_event, self.DepartureEvent)):
-                print("departure event: {}".format(next_event.nominal_sim_time))
+                #print("departure event: {}".format(next_event.nominal_sim_time))
                 
                 # remove packet from queue
                 # last element add to queue + L/R
@@ -393,7 +393,7 @@ while x < 0.95:
     discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=100)
     discreteEventSimulator.runSimulation(transmission_rate=10e6)
     print("#################################")
-    print("E[N]: {}, P_idle{}, P_Loss{}".format(discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))  
+    print("rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))  
     print("#################################")
   
     x += 0.1
