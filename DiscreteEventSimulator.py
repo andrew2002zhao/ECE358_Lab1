@@ -356,7 +356,7 @@ class DiscreteEventSimulator:
 
                     if not packet_queue.is_queue_empty():
                         
-                        d_event = self.DepartureEvent(departure_time=float(departure_event_queue[-1].departure_time + float(packet/transmission_rate)))
+                        d_event = self.DepartureEvent(departure_time=float(departure_event.departure_time + float(packet/transmission_rate)))
                         # departure_event_queue.append(d_event)
                         # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                         departure_event = d_event
