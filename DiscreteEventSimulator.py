@@ -293,7 +293,7 @@ class DiscreteEventSimulator:
             observer_event_pointer = 0
             simulation_time = 0
             
-            departure_event = null_departure_event
+            # departure_event = null_departure_event
 
             # departure_event_queue = []
             # departure_event_pointer = 0
@@ -355,7 +355,7 @@ class DiscreteEventSimulator:
                     packet_queue.remove_packet()
                     
                     simulation_time = next_event.nominal_sim_time
-                    departure_event = null_departure_event
+                   
 
                     if not packet_queue.is_queue_empty():
                         
@@ -363,7 +363,8 @@ class DiscreteEventSimulator:
                         # departure_event_queue.append(d_event)
                         # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                         departure_event = d_event
-
+                    else:
+                        departure_event = null_departure_event
             print("arrival_events", arrival_event_pointer, "observer_events", observer_event_pointer)
 
 
