@@ -128,20 +128,22 @@ class DiscreteEventSimulator:
             # observe elements in the queue
             # average number of packets in queue over current duration of nominal_sim_time, 
             # and time queue is empty over current duration of nominal_sim_time, and Packet dropped ratio
-            return self._running_time_average(observer_event_count), self._running_queue_empty(observer_event_count), self._running_dropped_packet_ratio(), 1-self._running_queue_empty(observer_event_count)
+            return self._running_time_average(observer_event_count), self._running_queue_empty(observer_event_count), self._running_dropped_packet_ratio()
         
 
         # returns the current running time average of elements in the queue
         def _running_time_average(self, observer_event_count):
-            
-            self.packet_observer_count = self.packet_observer_count + len(self.packet_queue)
-            return float(self.packet_observer_count/observer_event_count)
+            if observer_event_count > 0:
+                self.packet_observer_count = self.packet_observer_count + len(self.packet_queue)
+                return float(self.packet_observer_count/observer_event_count)
+            return 0
         
         # returns the current running Pidle 
         def _running_queue_empty(self, observer_event_count):
-            
-            self.queue_empty_count = self.queue_empty_count + 1 if self.is_queue_empty() else self.queue_empty_count
-            return float(self.queue_empty_count/observer_event_count)
+            if observer_event_count > 0: 
+                self.queue_empty_count = self.queue_empty_count + 1 if self.is_queue_empty() else self.queue_empty_count
+                return float(self.queue_empty_count/observer_event_count)
+            return 0
         
         # compute packet dropped ratio using dropped packets and total number of packets sent
         def _running_dropped_packet_ratio(self):
@@ -196,7 +198,7 @@ class DiscreteEventSimulator:
             
             time = self.getExponential(rate=rate)
             arrival_events_sum += time
-            self.arrival_events.append(self.ArrivalEvent(arrival_time=time))
+            self.arrival_events.append(self.ArrivalEvent(arrival_time=arrival_events_sum))
 
         # generate observer events 5*rate        
         observer_events_sum = 0
@@ -204,7 +206,7 @@ class DiscreteEventSimulator:
             
             time = self.getExponential(rate=5*rate)
             observer_events_sum += time
-            self.observer_events.append(self.ObserverEvent(observer_time=time))
+            self.observer_events.append(self.ObserverEvent(observer_time=observer_events_sum))
 
 
         #observer_times = self.simulateExponential(5*rate)
@@ -216,7 +218,10 @@ class DiscreteEventSimulator:
         # not allow this - we will have to use the compare the observer_times, 
         # arrival_times, and departure times and pick the min of the three
     
-   
+    # use this function to pass in different values of rho that will output different 
+    # rate parameters to use for simulating the exponential distribution
+    def exponentialRateParameter(self, rho, average_length=2000, transmission_rate=10e6):
+        return float((rho*transmission_rate)/average_length)
   
     def simulateExponential(self, rate):
         # rate must be bigger than 0
@@ -301,15 +306,8 @@ class DiscreteEventSimulator:
 
                 # need to dynamically generate departure_events either based on arrivals or previous departures
                 #############################################################################################
-                if packet_queue.is_queue_empty():
-                    # current arrival time + L/R
-                    d_event = self.DepartureEvent(departure_time=float(self.arrival_events[arrival_event_pointer].arrival_time + float(packet/transmission_rate)))
-                    departure_event_queue.append(d_event)
-                else:
-                    # last element add to queue + L/R
-                    # Andrew can we ever reach the case where there is nothing in the departure queue?
-                    d_event = self.DepartureEvent(departure_time=float(departure_event_queue[-1].departure_time + float(packet/transmission_rate)))
-                    departure_event_queue.append(d_event)
+                
+               
                 #############################################################################################
                 
                 # get next event 
@@ -321,24 +319,43 @@ class DiscreteEventSimulator:
                                 
                 if(isinstance(next_event, self.ArrivalEvent)):
                     # we have an arrival event
-                    print("Arrival Event")
+                    print("Arrival Event {}".format(next_event.nominal_sim_time))
                     # add packet to the queue
                     packet_queue.add_packet(packet=packet)
                     arrival_event_pointer = arrival_event_pointer + 1 if arrival_event_pointer < len(self.arrival_events)-1 else arrival_event_pointer
-                    simulation_time = next_event.nominal_sim_time 
+                    simulation_time = next_event.nominal_sim_time # changed to plus equal as we are not using cum sum
+                
+                    if packet_queue.is_queue_empty():
+                    # current arrival time + L/R
+                    
+                        d_event = self.DepartureEvent(departure_time=float(self.arrival_events[arrival_event_pointer].arrival_time + float(packet/transmission_rate)))
+                        departure_event_queue.append(d_event)
+                        departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
+                
                 elif(isinstance(next_event, self.ObserverEvent)):
-                    print("observer event")
+                    print("observer event; {}".format(next_event.nominal_sim_time))
                     # get queue statistics - this will be used to help us graph
-                    E_n, P_i, P_l, rho = packet_queue.queue_observe(observer_event_count=observer_event_pointer)
-                    print("E[N]: {}, P_idle: {}, P_loss: {}, rho: {}".format(E_n, P_i, P_l, rho))
+                    E_n, P_i, P_l = packet_queue.queue_observe(observer_event_count=observer_event_pointer)
+                    print("E[N]: {}, P_idle: {}, P_loss: {}".format(E_n, P_i, P_l))
                     observer_event_pointer = observer_event_pointer + 1 if observer_event_pointer < len(self.observer_events)-1 else observer_event_pointer
                     simulation_time = next_event.nominal_sim_time
                 elif(isinstance(next_event, self.DepartureEvent)):
-                    print("departure event")
+                    print("departure event: {}".format(next_event.nominal_sim_time))
+                    
                     # remove packet from queue
+                    # last element add to queue + L/R
+                    # Andrew can we ever reach the case where there is nothing in the departure queue?
+        
                     packet_queue.remove_packet()
-                    departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
+                    
                     simulation_time = next_event.nominal_sim_time
+
+                    if not packet_queue.is_queue_empty():
+                        
+                        d_event = self.DepartureEvent(departure_time=float(departure_event_queue[-1].departure_time + float(packet/transmission_rate)))
+                        departure_event_queue.append(d_event)
+                        departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
+
 
             print("arrival_events", arrival_event_pointer, "observer_events", observer_event_pointer)
 
