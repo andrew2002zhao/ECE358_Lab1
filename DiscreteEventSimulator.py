@@ -320,13 +320,8 @@ class DiscreteEventSimulator:
                             )
                                 
                 if(isinstance(next_event, self.ArrivalEvent)):
-                    # we have an arrival event
-                    print("Arrival Event {}".format(next_event.nominal_sim_time))
-                    # add packet to the queue
-                    packet_queue.add_packet(packet=packet)
-                    arrival_event_pointer = arrival_event_pointer + 1 if arrival_event_pointer < len(self.arrival_events)-1 else arrival_event_pointer
-                    simulation_time = next_event.nominal_sim_time # changed to plus equal as we are not using cum sum
-                
+                    
+                    
                     if packet_queue.is_queue_empty():
                     # current arrival time + L/R
                     
@@ -335,6 +330,14 @@ class DiscreteEventSimulator:
                         # departure_event_queue.append(d_event)
                         # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                 
+                    # we have an arrival event
+                    print("Arrival Event {}".format(next_event.nominal_sim_time))
+                    # add packet to the queue
+                    packet_queue.add_packet(packet=packet)
+                    arrival_event_pointer = arrival_event_pointer + 1 if arrival_event_pointer < len(self.arrival_events)-1 else arrival_event_pointer
+                    simulation_time = next_event.nominal_sim_time # changed to plus equal as we are not using cum sum
+                
+                   
                 elif(isinstance(next_event, self.ObserverEvent)):
                     print("observer event; {}".format(next_event.nominal_sim_time))
                     # get queue statistics - this will be used to help us graph
