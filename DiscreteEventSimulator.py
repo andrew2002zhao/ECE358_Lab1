@@ -8,7 +8,7 @@ from enum import Enum
 
 NUM_SAMPLE = 1000
 AVERAGE_LENGTH = 2000
-SIM_TIME = 1
+SIM_TIME = 1000
 
 class DiscreteEventSimulator:
     
@@ -473,7 +473,7 @@ def simulateM_M_1_K():
     P_loss.clear()
     rho.clear()
 
-    capacities = [10, 25, 50]
+    capacities = [10]
 
     multiplier = [1, 2] 
 
@@ -533,7 +533,7 @@ def simulateM_M_1_K():
    
 
 simulateM_M_1_K()
-simulateM_M_1()
+# simulateM_M_1()
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
 #discreteEventSimulator.runSimulation(transmission_rate=10e6, is_finite=True, capacity=10)
 
