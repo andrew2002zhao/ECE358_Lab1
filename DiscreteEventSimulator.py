@@ -473,7 +473,7 @@ def simulateM_M_1_K():
     P_loss.clear()
     rho.clear()
 
-    capacities = [25]
+    capacities = [50]
 
     multiplier = [1, 2] 
 
