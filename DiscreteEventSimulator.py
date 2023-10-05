@@ -280,7 +280,7 @@ class DiscreteEventSimulator:
         return result
         
     # is_finite to determine if we are using M/M/K or M/M/1 queue
-    def runSimulation(self, transmission_rate=10e6, is_finite=False, capacity=None):
+    def runSimulation(self, transmission_rate=1e6, is_finite=False, capacity=None):
         
         def getNextEvent(arrivalEvent, observerEvent, departureEvent):
             # Andrew put events in event recorder - to just log events - super simple task 
@@ -381,7 +381,7 @@ class DiscreteEventSimulator:
 
 # use this function to pass in different values of rho that will output different 
 # rate parameters to use for simulating the exponential distribution
-def exponentialRateParameter(rho, average_length=2000, transmission_rate=10e6):
+def exponentialRateParameter(rho, average_length=2000, transmission_rate=1e6):
     return float((rho*transmission_rate)/average_length)
 
 
@@ -442,7 +442,7 @@ def simulateM_M_1():
         while x < 0.95:
             rate = exponentialRateParameter(rho=x)
             discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=SIM_TIME*multiple)
-            discreteEventSimulator.runSimulation(transmission_rate=10e6)
+            discreteEventSimulator.runSimulation(transmission_rate=1e6)
             print("#################################")
             print("rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))
 
@@ -491,7 +491,7 @@ def simulateM_M_1_K():
             while x < 1.5:
                 rate = exponentialRateParameter(rho=x)
                 discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=SIM_TIME*multiple)
-                discreteEventSimulator.runSimulation(transmission_rate=10e6, is_finite=True, capacity=cap)
+                discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=cap)
                 print("#################################")
                 print("capacity: {}, rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(cap,x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))
 
@@ -537,7 +537,7 @@ def simulateM_M_1_K():
 simulateM_M_1_K()
 simulateM_M_1()
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
-#discreteEventSimulator.runSimulation(transmission_rate=10e6, is_finite=True, capacity=10)
+#discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
 
 #plt.figure()
 
