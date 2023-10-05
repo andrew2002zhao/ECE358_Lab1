@@ -6,9 +6,11 @@ import heapq
 
 from enum import Enum
 
+from collections import deque
+
 NUM_SAMPLE = 1000
 AVERAGE_LENGTH = 2000
-SIM_TIME = 1
+SIM_TIME = 1000
 
 class DiscreteEventSimulator:
     
@@ -82,7 +84,7 @@ class DiscreteEventSimulator:
             self.capacity = capacity
 
 
-            self.packet_queue = []
+            self.packet_queue = deque()
             self.packet_counter = 0 # to help with determining E[N]
             self.queue_empty_count = 0
             self.packet_observer_count = 0
@@ -121,7 +123,7 @@ class DiscreteEventSimulator:
             if not self.is_queue_empty():               
 
                 packet_to_return = self.packet_queue[0]
-                del self.packet_queue[0]
+                self.packet_queue.popleft()
 
                 return packet_to_return # maybe use a deque here 
             
