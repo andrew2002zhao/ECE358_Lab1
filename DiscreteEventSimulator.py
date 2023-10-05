@@ -419,6 +419,7 @@ def plot_single_graph(x, y, plot_title, x_title, y_title):
     #pdf.close()
 
 import pandas as pd 
+from math import abs
 
 E_n = []
 P_idle = []
@@ -462,8 +463,12 @@ def simulateM_M_1():
         data_frame_list.append(data_frame)
         print('--------------------------------- FINISHED SIM_TIME*{} -----------------------------------'.format(multiple))
     
+    def _f(col_1, col_2):
+        return 0 if float(abs(col_1 - col_2)/col_1)*100 > 5 else 1
+        
     # join the two dataframes on rho as the primary ID
     result = pd.merge(data_frame_list[0], data_frame_list[1], on='rho', how='inner')
+    result['Within_95_to_105'] = result.apply(lambda x: _f(x['E[N]_1'], x['E[N]_2']), axis=1)
 
     # output data to .csv
     result.to_csv('M_M_1_Simulation.csv', sep=",")
@@ -546,3 +551,5 @@ simulateM_M_1()
 #plt.ylabel("E[N]")
 #plt.plot(rho, E_n, 'bo-')
 #plt.show()
+
+
