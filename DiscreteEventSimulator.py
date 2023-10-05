@@ -419,7 +419,6 @@ def plot_single_graph(x, y, plot_title, x_title, y_title):
     #pdf.close()
 
 import pandas as pd 
-from math import abs
 
 E_n = []
 P_idle = []
@@ -464,11 +463,13 @@ def simulateM_M_1():
         print('--------------------------------- FINISHED SIM_TIME*{} -----------------------------------'.format(multiple))
     
     def _f(col_1, col_2):
-        return 0 if float(abs(col_1 - col_2)/col_1)*100 > 5 else 1
+        return float(abs(col_1 - col_2)/col_1)*100
         
     # join the two dataframes on rho as the primary ID
     result = pd.merge(data_frame_list[0], data_frame_list[1], on='rho', how='inner')
-    result['Within_95_to_105'] = result.apply(lambda x: _f(x['E[N]_1'], x['E[N]_2']), axis=1)
+
+    # check if values are within 5% of each other 
+    result['Within_95%_to_105%'] = result.apply(lambda x: _f(x['E[N]_1'], x['E[N]_2']), axis=1)
 
     # output data to .csv
     result.to_csv('M_M_1_Simulation.csv', sep=",")
@@ -535,11 +536,17 @@ def simulateM_M_1_K():
 
     result = result.drop(columns=column_names_to_drop)
 
+    # check if values are within 5% of each other 
+    def _f(col_1, col_2):
+        return float(abs(col_1 - col_2)/col_1)*100
+    
+    result['Within_95%_to_105%_cap_50'] = result.apply(lambda x: _f(x['E[N]_50_1'], x['E[N]_50_2']), axis=1)
+
     # save results to a csv
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-simulateM_M_1_K()
+#simulateM_M_1_K()
 simulateM_M_1()
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
 #discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
