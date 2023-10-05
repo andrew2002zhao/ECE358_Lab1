@@ -8,6 +8,7 @@ from enum import Enum
 
 NUM_SAMPLE = 1000
 AVERAGE_LENGTH = 2000
+SIM_TIME = 10
 
 class DiscreteEventSimulator:
     
@@ -90,7 +91,7 @@ class DiscreteEventSimulator:
             self.end_duration = 0
 
             # PLoss counter - count the number of packets that are dropped if queue size > cap
-            self.dropped_packet = None if is_finite else 0
+            self.dropped_packet = None if not is_finite else 0
 
             # E[N] - have a running sum of number of packets in the queue then divide by total 
             #        simulation time 
@@ -103,7 +104,11 @@ class DiscreteEventSimulator:
                 if len(self.packet_queue) == self.capacity:
                     self.dropped_packet = self.dropped_packet + 1
                     self.packet_counter = self.packet_counter + 1 # still need to increment this to compute the droped packets over TOTAL number of packets wanting to be sent 
-                    return 
+                    return
+                else:
+                    self.packet_queue.append(packet)
+                    self.packet_counter = self.packet_counter + 1
+                    return                     
 
             
            
@@ -151,7 +156,10 @@ class DiscreteEventSimulator:
             if not self.is_finite:
                 return None
             else:
-                return float(self.dropped_packet/self.packet_counter)
+                if self.packet_counter > 0:
+                    return float(self.dropped_packet/self.packet_counter)
+                else:
+                    return 0.0
 
 
 
@@ -282,7 +290,7 @@ class DiscreteEventSimulator:
                 return observerEvent
             return departureEvent
         
-        max_simulation_time = 1 * self.sim_time
+        max_simulation_time = 1 * self.sim_time # andrew we have to do this for t and 2*t
         # make queue empty
         self.network_queue = []
         # initialize all events and times
@@ -414,25 +422,78 @@ P_idle = []
 P_loss = []
 rho = []
 
-x = 0.25
-while x < 0.95:
-    rate = exponentialRateParameter(rho=x)
-    discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=100)
-    discreteEventSimulator.runSimulation(transmission_rate=10e6)
-    print("#################################")
-    print("rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))
+def simulateM_M_1():
 
-    rho.append(x)
-    E_n.append(discreteEventSimulator.E_n)
-    P_idle.append(discreteEventSimulator.P_i)  
-    print("#################################")
-  
-    x += 0.1
+    multiplier = [1, 2]
 
-plt.figure()
+    for multiple in multiplier:
+        E_n.clear()
+        P_idle.clear()
+        P_loss.clear
+        rho.clear()
+        x = 0.25
+        print('--------------------------------- START SIM_TIME*{} -----------------------------------'.format(multiple))
+        while x < 0.95:
+            rate = exponentialRateParameter(rho=x)
+            discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=SIM_TIME*multiple)
+            discreteEventSimulator.runSimulation(transmission_rate=10e6)
+            print("#################################")
+            print("rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))
 
-plt.title("Average packets vs Rho")
-plt.xlabel("rho")
-plt.ylabel("E[N]")
-plt.plot(rho, E_n, 'bo-')
-plt.show()
+            rho.append(x)
+            E_n.append(discreteEventSimulator.E_n)
+            P_idle.append(discreteEventSimulator.P_i)  
+            print("#################################")
+        
+            x += 0.1
+        print('--------------------------------- FINISHED SIM_TIME*{} -----------------------------------'.format(multiple))
+
+
+def simulateM_M_M_1_K():
+
+    E_n.clear()
+    P_idle.clear()
+    P_loss.clear
+    rho.clear()
+
+    capacities = [10, 25, 50]
+
+    multiplier = [1, 2]
+
+    for multiple in multiplier:
+        print('--------------------------------- START SIM_TIME*{} -----------------------------------'.format(multiple))
+
+        for cap in capacities:
+
+            x = 0.50
+            while x < 1.5:
+                rate = exponentialRateParameter(rho=x)
+                discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=SIM_TIME*multiple)
+                discreteEventSimulator.runSimulation(transmission_rate=10e6, is_finite=True, capacity=cap)
+                print("#################################")
+                print("capacity: {}, rho: {}, rate_parameter: {}, E[N]: {}, P_idle: {}, P_Loss: {}".format(cap,x, rate, discreteEventSimulator.E_n, discreteEventSimulator.P_i, discreteEventSimulator.P_l))
+
+                rho.append(x)
+                E_n.append(discreteEventSimulator.E_n)
+                P_idle.append(discreteEventSimulator.P_i)  
+                print("#################################")
+            
+                x += 0.1
+            E_n.clear()
+            P_idle.clear()
+            P_loss.clear
+            rho.clear()
+        print('--------------------------------- FINISHED SIM_TIME*{} -----------------------------------'.format(multiple))
+   
+
+simulateM_M_M_1_K()
+#discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
+#discreteEventSimulator.runSimulation(transmission_rate=10e6, is_finite=True, capacity=10)
+
+#plt.figure()
+
+#plt.title("Average packets vs Rho")
+#plt.xlabel("rho")
+#plt.ylabel("E[N]")
+#plt.plot(rho, E_n, 'bo-')
+#plt.show()
