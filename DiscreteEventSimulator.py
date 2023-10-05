@@ -8,7 +8,7 @@ from enum import Enum
 
 NUM_SAMPLE = 1000
 AVERAGE_LENGTH = 2000
-SIM_TIME = 10
+SIM_TIME = 1
 
 class DiscreteEventSimulator:
     
@@ -375,7 +375,7 @@ class DiscreteEventSimulator:
                     departure_event_counter += 1
                 else:
                     departure_event = null_departure_event
-        print("arrival_events", arrival_event_pointer,"departure_events",departure_event_counter ,"observer_events", observer_event_pointer)
+        #print("arrival_events", arrival_event_pointer,"departure_events",departure_event_counter ,"observer_events", observer_event_pointer)
 
 # use this function to pass in different values of rho that will output different 
 # rate parameters to use for simulating the exponential distribution
@@ -416,6 +416,7 @@ def plot_single_graph(x, y, plot_title, x_title, y_title):
     plt.show()
     #pdf.close()
 
+import pandas as pd 
 
 E_n = []
 P_idle = []
@@ -426,10 +427,13 @@ def simulateM_M_1():
 
     multiplier = [1, 2]
 
+    data_frame = None
+    data_frame_list = []
+
     for multiple in multiplier:
         E_n.clear()
         P_idle.clear()
-        P_loss.clear
+        P_loss.clear()
         rho.clear()
         x = 0.25
         print('--------------------------------- START SIM_TIME*{} -----------------------------------'.format(multiple))
@@ -446,19 +450,35 @@ def simulateM_M_1():
             print("#################################")
         
             x += 0.1
+        
+        # add simulation results to a data frame
+        data_frame = pd.DataFrame({
+            "rho" : rho,
+            "E[N]" + "_"+ str(multiple) : E_n,
+            "P_idle" + "_"+ str(multiple) : P_idle
+        })
+        data_frame_list.append(data_frame)
         print('--------------------------------- FINISHED SIM_TIME*{} -----------------------------------'.format(multiple))
+    
+    # join the two dataframes on rho as the primary ID
+    result = pd.merge(data_frame_list[0], data_frame_list[1], on='rho', how='inner')
 
+    # output data to .csv
+    result.to_csv('M_M_1_Simulation.csv', sep=",")
 
-def simulateM_M_M_1_K():
+def simulateM_M_1_K():
 
     E_n.clear()
     P_idle.clear()
-    P_loss.clear
+    P_loss.clear()
     rho.clear()
 
     capacities = [10, 25, 50]
 
-    multiplier = [1, 2]
+    multiplier = [1, 2] 
+
+    data_frame_list = []
+    data_frame = None
 
     for multiple in multiplier:
         print('--------------------------------- START SIM_TIME*{} -----------------------------------'.format(multiple))
@@ -475,18 +495,45 @@ def simulateM_M_M_1_K():
 
                 rho.append(x)
                 E_n.append(discreteEventSimulator.E_n)
-                P_idle.append(discreteEventSimulator.P_i)  
+                P_loss.append(discreteEventSimulator.P_l)  
                 print("#################################")
             
                 x += 0.1
+            
+            print("size rho {}, size E[N] {}, size P_loss {}".format(len(rho), len(E_n), len(P_loss)))
+            data_frame = pd.DataFrame({
+                "rho" if multiple == 1 and cap == 10 else "rho"+"_"+str(cap) + "_" + str(multiple): rho,
+                "E[N]" + "_"+str(cap)+"_"+str(multiple) : E_n,
+                "P_loss" + "_" + str(cap) + "_" + str(multiple) : P_loss
+            })
+            data_frame_list.append(data_frame)
+           
             E_n.clear()
             P_idle.clear()
-            P_loss.clear
+            P_loss.clear()
             rho.clear()
+
         print('--------------------------------- FINISHED SIM_TIME*{} -----------------------------------'.format(multiple))
+
+    # concatenate all data frames from various simulations
+    result = pd.concat(data_frame_list, axis=1, join='inner')
+
+    # drop all redundant columns with the name rho_cap_multiple i.e. rho_10_2
+    column_names_to_drop = []
+    for multiple in multiplier:
+        for cap in capacities:
+            if multiple == 1 and cap == 10:
+                continue
+            column_names_to_drop.append("rho"+"_"+str(cap) + "_" + str(multiple))
+
+    result = result.drop(columns=column_names_to_drop)
+
+    # save results to a csv
+    result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-simulateM_M_M_1_K()
+simulateM_M_1_K()
+simulateM_M_1()
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
 #discreteEventSimulator.runSimulation(transmission_rate=10e6, is_finite=True, capacity=10)
 
