@@ -439,17 +439,22 @@ def simulateM_M_1_K():
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-#simulateM_M_1_K()
-#simulateM_M_1()
-#discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
-#discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
 
-#plt.figure()
+# Question 1
+exp75 = simulateExponential(rate=75)
+print("Q1 mean: {} and var: {} of exponential distibution with rate: 75".format(exp75.mean(), exp75.var()))
 
-#plt.title("Average packets vs Rho")
-#plt.xlabel("rho")
-#plt.ylabel("E[N]")
-#plt.plot(rho, E_n, 'bo-')
-#plt.show()
+# Question 2, 3
+simulateM_M_1()
+
+# Question 4
+print("-----------------------------------------Question 4 START------------------------------------------")
+discreteEventSimulatorQ4 = DiscreteEventSimulator(rate=exponentialRateParameter(rho=1.2), sim_time=1000)
+discreteEventSimulatorQ4.runSimulation(transmission_rate=1e6)
+print("Q4 E[N]: {}, Pidle: {}".format(discreteEventSimulatorQ4.E_n, discreteEventSimulatorQ4.P_i))
+print("-----------------------------------------Question 4 END ------------------------------------------")
+
+# Question 6
+simulateM_M_1_K()
 
 
