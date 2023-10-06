@@ -13,6 +13,24 @@ NUM_SAMPLE = 1000
 AVERAGE_LENGTH = 2000
 SIM_TIME = 1000
 
+
+def simulateExponential(self, rate):
+        # rate must be bigger than 0
+        if rate <= 0:
+            return []
+        # natural logarithm
+        def _ln(x):
+            return log(x,e)
+
+        # generate NUM_SMAPLE points from uniform distribution
+        U = array(uniform(low=0.0, high=1.0, size=NUM_SAMPLE))
+
+        # vectorize ln function to apply to numpy array
+        _vln = vectorize(_ln)
+
+        # return numpy array of NUM_SAMPLE points using formula outlined in doc
+        return array(-(1/rate)*_vln(1-U))
+
 class DiscreteEventSimulator:
     
     class Event:
@@ -163,23 +181,17 @@ class DiscreteEventSimulator:
             time = self.getExponential(rate=5*rate)
             observer_events_sum += time
             self.observer_events.append(self.ObserverEvent(observer_time=observer_events_sum))
-  
-    def simulateExponential(self, rate):
-        # rate must be bigger than 0
-        if rate <= 0:
-            return []
-        # natural logarithm
-        def _ln(x):
-            return log(x,e)
 
-        # generate NUM_SMAPLE points from uniform distribution
-        U = array(uniform(low=0.0, high=1.0, size=NUM_SAMPLE))
 
-        # vectorize ln function to apply to numpy array
-        _vln = vectorize(_ln)
+        #observer_times = self.simulateExponential(5*rate)
+        # @orson we need a prefix sum here not the base time
+        #observer_times = np.cumsum(observer_times)
+        #self.observer_events = [ self.ObserverEvent(observer_time=x) for x in observer_times]
 
-        # return numpy array of NUM_SAMPLE points using formula outlined in doc
-        return array(-(1/rate)*_vln(1-U))
+        # we will not be able to use the future_events_heap as python does
+        # not allow this - we will have to use the compare the observer_times, 
+        # arrival_times, and departure times and pick the min of the three
+    
 
     def getExponential(self, rate=1000):
         
@@ -427,8 +439,8 @@ def simulateM_M_1_K():
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-simulateM_M_1_K()
-simulateM_M_1()
+#simulateM_M_1_K()
+#simulateM_M_1()
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
 #discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
 
