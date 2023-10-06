@@ -12,6 +12,24 @@ NUM_SAMPLE = 1000
 AVERAGE_LENGTH = 2000
 SIM_TIME = 1000
 
+
+def simulateExponential(self, rate):
+        # rate must be bigger than 0
+        if rate <= 0:
+            return []
+        # natural logarithm
+        def _ln(x):
+            return log(x,e)
+
+        # generate NUM_SMAPLE points from uniform distribution
+        U = array(uniform(low=0.0, high=1.0, size=NUM_SAMPLE))
+
+        # vectorize ln function to apply to numpy array
+        _vln = vectorize(_ln)
+
+        # return numpy array of NUM_SAMPLE points using formula outlined in doc
+        return array(-(1/rate)*_vln(1-U))
+
 class DiscreteEventSimulator:
     
   
@@ -231,24 +249,6 @@ class DiscreteEventSimulator:
         # not allow this - we will have to use the compare the observer_times, 
         # arrival_times, and departure times and pick the min of the three
     
-
-  
-    def simulateExponential(self, rate):
-        # rate must be bigger than 0
-        if rate <= 0:
-            return []
-        # natural logarithm
-        def _ln(x):
-            return log(x,e)
-
-        # generate NUM_SMAPLE points from uniform distribution
-        U = array(uniform(low=0.0, high=1.0, size=NUM_SAMPLE))
-
-        # vectorize ln function to apply to numpy array
-        _vln = vectorize(_ln)
-
-        # return numpy array of NUM_SAMPLE points using formula outlined in doc
-        return array(-(1/rate)*_vln(1-U))
 
     def getExponential(self, rate=1000):
         
@@ -546,8 +546,23 @@ def simulateM_M_1_K():
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-#simulateM_M_1_K()
-#simulateM_M_1()
+# Question 1
+exp75 = simulateExponential(rate=75)
+print("Q1 mean: {} and var: {} of exponential distibution with rate: 75".format(exp75.mean(), exp75.var()))
+
+# Question 2, 3
+simulateM_M_1()
+
+# Question 4
+print("-----------------------------------------Question 4 START------------------------------------------")
+discreteEventSimulatorQ4 = DiscreteEventSimulator(rate=exponentialRateParameter(rho=1.2), sim_time=1000)
+discreteEventSimulatorQ4.runSimulation(transmission_rate=1e6)
+print("Q4 E[N]: {}, Pidle: {}".format(discreteEventSimulatorQ4.E_n, discreteEventSimulatorQ4.P_i))
+print("-----------------------------------------Question 4 END ------------------------------------------")
+
+# Question 6
+simulateM_M_1_K()
+
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
 #discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
 
