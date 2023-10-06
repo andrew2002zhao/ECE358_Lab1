@@ -1,8 +1,9 @@
 from math import log,e
-import numpy as np
+
 from numpy.random import uniform
 from numpy import array, vectorize
-import heapq
+
+import pandas as pd
 
 from enum import Enum
 
@@ -14,8 +15,6 @@ SIM_TIME = 1000
 
 class DiscreteEventSimulator:
     
-  
-
     class Event:
         class EventType(Enum):
             ARRIVAL = 1
@@ -23,46 +22,31 @@ class DiscreteEventSimulator:
             OBSERVER = 3
         def __init__(self):
             self.event_type = None
-            self.nominal_sim_time = None # used for sorting events
+            self.nominal_sim_time = None # used for event times
         
 
     class ArrivalEvent(Event):
 
-        def __init__(self, arrival_time, packet_length=None, service_time=None):
+        def __init__(self, arrival_time):
             super().__init__()
-            # should we add a flag to check if arrival packet is dropped or not?? @drew
-            self.arrival_time = arrival_time
-            self.packet_length = packet_length
-            self.service_time = service_time
-
+           
             self.event_type = self.EventType.ARRIVAL.name
-
             self.nominal_sim_time = arrival_time
 
     class DepartureEvent(Event):
 
-        def __init__(self, departure_time, transmission_time=None, is_queue_idle=None, packet_length=None):
+        def __init__(self, departure_time):
             super().__init__()
-            self.departure_time = departure_time
-            self.transmission_time = transmission_time
-            self.is_queue_idle = is_queue_idle
-            self.packet_length = packet_length
-
+            
             self.event_type = self.EventType.DEPARTURE.name
-
             self.nominal_sim_time = departure_time
 
     class ObserverEvent(Event):
         
-        def __init__(self, observer_time, time_average_packets=None, average_packets_in_queue=None, proportion_idle=None, proportion_loss=None):
+        def __init__(self, observer_time):
             super().__init__()
-            self.time_average_packets = time_average_packets
-            self.average_packets_in_queue = average_packets_in_queue
-            self.proportion_idle = proportion_idle
-            self.proportion_loss = proportion_loss
 
             self.event_type = self.EventType.OBSERVER.name
-
             self.nominal_sim_time = observer_time
 
             
@@ -164,17 +148,6 @@ class DiscreteEventSimulator:
                     return 0.0
 
 
-
-    class EventSheet:
-        def __init__(self):
-            self.observations = []
-
-        def print_observations(self):
-            pass
-
-        def append(self, event):
-            pass
-
     def __init__(self, rate, sim_time=100, buffer_size=0):
 
         self.rate = rate
@@ -198,12 +171,7 @@ class DiscreteEventSimulator:
         self.P_i = 0
         self.P_l = 0
 
-        # generate our incoming packet events 
-
-        #arrival_times = self.simulateExponential(rate)
-        # @orson we need a prefix sum here not the base time
-        #arrival_times = np.cumsum(arrival_times)
-        #self.arrival_events = [ self.ArrivalEvent(arrival_time=x) for x in arrival_times]
+        # generate our incoming packet events
 
         #generate arrival events
         arrival_events_sum = 0
@@ -220,18 +188,6 @@ class DiscreteEventSimulator:
             time = self.getExponential(rate=5*rate)
             observer_events_sum += time
             self.observer_events.append(self.ObserverEvent(observer_time=observer_events_sum))
-
-
-        #observer_times = self.simulateExponential(5*rate)
-        # @orson we need a prefix sum here not the base time
-        #observer_times = np.cumsum(observer_times)
-        #self.observer_events = [ self.ObserverEvent(observer_time=x) for x in observer_times]
-
-        # we will not be able to use the future_events_heap as python does
-        # not allow this - we will have to use the compare the observer_times, 
-        # arrival_times, and departure times and pick the min of the three
-    
-
   
     def simulateExponential(self, rate):
         # rate must be bigger than 0
@@ -276,15 +232,13 @@ class DiscreteEventSimulator:
         U = uniform(low=0.0, high=1.0, size=1)
 
         result = float(-(1/rate)*_ln(1-U))
-        #print("exponentially distributed packet length:", result)
         return result
         
     # is_finite to determine if we are using M/M/K or M/M/1 queue
     def runSimulation(self, transmission_rate=1e6, is_finite=False, capacity=None):
         
         def getNextEvent(arrivalEvent, observerEvent, departureEvent):
-            # Andrew put events in event recorder - to just log events - super simple task 
-            # add
+          
 
             if(arrivalEvent.nominal_sim_time < observerEvent.nominal_sim_time and arrivalEvent.nominal_sim_time < departureEvent.nominal_sim_time):
                 return arrivalEvent
@@ -292,7 +246,7 @@ class DiscreteEventSimulator:
                 return observerEvent
             return departureEvent
         
-        max_simulation_time = 1 * self.sim_time # andrew we have to do this for t and 2*t
+        max_simulation_time = 1 * self.sim_time 
         # make queue empty
         self.network_queue = []
         # initialize all events and times
@@ -303,11 +257,7 @@ class DiscreteEventSimulator:
         simulation_time = 0
         departure_event_counter = 0
         
-        # departure_event = null_departure_event
-
-        # departure_event_queue = []
-        # departure_event_pointer = 0
-        
+  
         # instantiate new Queue class - use M/M/1 or M/M/K queue depending on is_finite
         packet_queue = self.Queue() if not is_finite else self.Queue(is_finite=True, capacity=capacity)
 
@@ -316,12 +266,6 @@ class DiscreteEventSimulator:
             # get packet to be transmitted 
             packet = self.getPacketLength()
 
-            # need to dynamically generate departure_events either based on arrivals or previous departures
-            #############################################################################################
-            
-            
-            #############################################################################################
-            
             # get next event 
             next_event = getNextEvent(
                             self.arrival_events[arrival_event_pointer],
@@ -335,14 +279,11 @@ class DiscreteEventSimulator:
                 if packet_queue.is_queue_empty():
                 # current arrival time + L/R
                 
-                    d_event = self.DepartureEvent(departure_time=float(self.arrival_events[arrival_event_pointer].arrival_time + float(packet/transmission_rate)))
+                    d_event = self.DepartureEvent(departure_time=float(self.arrival_events[arrival_event_pointer].nominal_sim_time + float(packet/transmission_rate)))
                     departure_event = d_event
                     departure_event_counter += 1
-                    # departure_event_queue.append(d_event)
-                    # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
-            
+                   
                 # we have an arrival event
-                #print("Arrival Event {}".format(next_event.nominal_sim_time))
                 # add packet to the queue
                 packet_queue.add_packet(packet=packet)
                 arrival_event_pointer = arrival_event_pointer + 1 if arrival_event_pointer < len(self.arrival_events)-1 else arrival_event_pointer
@@ -350,80 +291,31 @@ class DiscreteEventSimulator:
             
                 
             elif(isinstance(next_event, self.ObserverEvent)):
-                #print("observer event; {}".format(next_event.nominal_sim_time))
-                # get queue statistics - this will be used to help us graph
-                self.E_n, self.P_i, self.P_l = packet_queue.queue_observe(observer_event_count=observer_event_pointer)
-                #print("E[N]: {}, P_idle: {}, P_loss: {}".format(self.E_n, self.P_i, self.P_l))
-                observer_event_pointer = observer_event_pointer + 1 if observer_event_pointer < len(self.observer_events)-1 else observer_event_pointer
-                simulation_time = next_event.nominal_sim_time
-            elif(isinstance(next_event, self.DepartureEvent)):
-                #print("departure event: {}".format(next_event.nominal_sim_time))
-                
-                # remove packet from queue
-                # last element add to queue + L/R
-                # Andrew can we ever reach the case where there is nothing in the departure queue?
-    
-                packet_queue.remove_packet()
-                
+                # get queue statistics - this will be used to help us graphnominal_sim_time
                 simulation_time = next_event.nominal_sim_time
                 
 
                 if not packet_queue.is_queue_empty():
                     
-                    d_event = self.DepartureEvent(departure_time=float(departure_event.departure_time + float(packet/transmission_rate)))
+                    d_event = self.DepartureEvent(departure_time=float(departure_event.nominal_sim_time + float(packet/transmission_rate)))
                     # departure_event_queue.append(d_event)
                     # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                     departure_event = d_event
                     departure_event_counter += 1
                 else:
                     departure_event = null_departure_event
-        #print("arrival_events", arrival_event_pointer,"departure_events",departure_event_counter ,"observer_events", observer_event_pointer)
+    
 
 # use this function to pass in different values of rho that will output different 
 # rate parameters to use for simulating the exponential distribution
 def exponentialRateParameter(rho, average_length=2000, transmission_rate=1e6):
     return float((rho*transmission_rate)/average_length)
 
-
-# def(p):
-#     
-
-    
-#discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
-#discreteEventSimulator.runSimulation(transmission_rate=10e3)
-#discreteEventSimulator.getPacketLength()
-
-# exp75 = simulateExponential(75)
-# print(exp75)
-# print(exp75.mean(), exp75.var())
-
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-
-import matplotlib
-matplotlib.use('Agg')
-
-
-def plot_single_graph(x, y, plot_title, x_title, y_title):
-    plt.figure()
-    plt.clf()
-
-    plt.title(plot_title)
-    plt.xlabel(x_title)
-    plt.ylabel(y_title)
-    plt.plot(x, y, 'bo-')
-
-    #pdf = PdfPages(plot_title)
-    plt.savefig(plot_title + '.pdf')
-    plt.show()
-    #pdf.close()
-
-import pandas as pd 
-
-E_n = []
-P_idle = []
+# arrays to hold data from each simulation run
 P_loss = []
+P_idle = []
 rho = []
+E_n = []
 
 def simulateM_M_1():
 
@@ -546,17 +438,8 @@ def simulateM_M_1_K():
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-#simulateM_M_1_K()
-simulateM_M_1()
-#discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
-#discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
-
-#plt.figure()
-
-#plt.title("Average packets vs Rho")
-#plt.xlabel("rho")
-#plt.ylabel("E[N]")
-#plt.plot(rho, E_n, 'bo-')
-#plt.show()
-
-
+if __name__ == "__main__":
+    
+    discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=SIM_TIME*multiple)
+    # simulateM_M_1_K()
+    # simulateM_M_1()
