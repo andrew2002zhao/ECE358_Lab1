@@ -48,17 +48,7 @@ class DiscreteEventSimulator:
 
             self.event_type = self.EventType.OBSERVER.name
             self.nominal_sim_time = observer_time
-
-            
-    class Packet:
-        def __init__(self, packet_id, packet_length, packet_arrival_time, packet_departure_time):
-        
-            self.packet_id = packet_id
-            self.packet_length = packet_length
-            self.packet_arrival_time = packet_arrival_time
-            self.packet_departure_time = packet_departure_time
     
- 
     class Queue:
         def __init__(self, is_finite=False, capacity=None):
             # if is_finite set to True then capacity cannot be none - M/M/K queue
@@ -72,9 +62,6 @@ class DiscreteEventSimulator:
             self.packet_counter = 0 # to help with determining E[N]
             self.queue_empty_count = 0
             self.packet_observer_count = 0
-
-            self.start_duration = 0
-            self.end_duration = 0
 
             # PLoss counter - count the number of packets that are dropped if queue size > cap
             self.dropped_packet = None if not is_finite else 0
@@ -106,10 +93,8 @@ class DiscreteEventSimulator:
         def remove_packet(self):
             if not self.is_queue_empty():               
 
-                packet_to_return = self.packet_queue[0]
                 self.packet_queue.popleft()
 
-                return packet_to_return # maybe use a deque here 
             
             
         def is_queue_empty(self):
@@ -291,13 +276,27 @@ class DiscreteEventSimulator:
             
                 
             elif(isinstance(next_event, self.ObserverEvent)):
-                # get queue statistics - this will be used to help us graphnominal_sim_time
+
+                # get queue statistics - this will be used to help us graph
+                self.E_n, self.P_i, self.P_l = packet_queue.queue_observe(observer_event_count=observer_event_pointer)
+               
+                observer_event_pointer = observer_event_pointer + 1 if observer_event_pointer < len(self.observer_events)-1 else observer_event_pointer
+                simulation_time = next_event.nominal_sim_time
+            elif(isinstance(next_event, self.DepartureEvent)):
+                
+                
+                # remove packet from queue
+                # last element add to queue + L/R
+              
+    
+                packet_queue.remove_packet()
+                
                 simulation_time = next_event.nominal_sim_time
                 
 
                 if not packet_queue.is_queue_empty():
                     
-                    d_event = self.DepartureEvent(departure_time=float(departure_event.nominal_sim_time + float(packet/transmission_rate)))
+                    d_event = self.DepartureEvent(departure_time=float(departure_event.departure_time + float(packet/transmission_rate)))
                     # departure_event_queue.append(d_event)
                     # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                     departure_event = d_event
@@ -440,6 +439,7 @@ def simulateM_M_1_K():
 
 if __name__ == "__main__":
     
-    discreteEventSimulator = DiscreteEventSimulator(rate=rate, sim_time=SIM_TIME*multiple)
-    # simulateM_M_1_K()
-    # simulateM_M_1()
+    discreteEventSimulator = DiscreteEventSimulator(rate=1, sim_time=1)
+    exponential = discreteEventSimulator.simulateExponential(75)
+    print(exponential.mean(), exponential.var())
+  
