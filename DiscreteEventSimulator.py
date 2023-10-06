@@ -357,7 +357,8 @@ def simulateM_M_1():
     result = pd.merge(data_frame_list[0], data_frame_list[1], on='rho', how='inner')
 
     # check if values are within 5% of each other 
-    result['Percent_Error'] = result.apply(lambda x: _f(x['E[N]_1'], x['E[N]_2']), axis=1)
+    result['Percent_Error_E[N]'] = result.apply(lambda x: _f(x['E[N]_1'], x['E[N]_2']), axis=1)
+    result['Percent_Error_P_idle'] = result.apply(lambda x: _f(x['P_idle_1'], x['P_idle_2']), axis=1)
 
     # output data to .csv
     result.to_csv('M_M_1_Simulation.csv', sep=",")
@@ -428,7 +429,8 @@ def simulateM_M_1_K():
     def _f(col_1, col_2):
         return float(abs(col_1 - col_2)/col_1)*100
     
-    result['Percent_Error_cap_50'] = result.apply(lambda x: _f(x['E[N]_50_1'], x['E[N]_50_2']), axis=1)
+    result['Percent_Error_E[N]_cap_50'] = result.apply(lambda x: _f(x['E[N]_50_1'], x['E[N]_50_2']), axis=1)
+    result['Percent_Error_P_Loss_cap_50'] = result.apply(lambda x: _f(x['P_loss_50_1'], x['P_loss_50_2']), axis=1)
 
     # save results to a csv
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
