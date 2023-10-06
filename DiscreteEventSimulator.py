@@ -427,9 +427,17 @@ def simulateM_M_1_K():
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-if __name__ == "__main__":
-    
-    discreteEventSimulator = DiscreteEventSimulator(rate=1, sim_time=1)
-    exponential = discreteEventSimulator.simulateExponential(75)
-    print(exponential.mean(), exponential.var())
-  
+simulateM_M_1_K()
+simulateM_M_1()
+#discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
+#discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
+
+#plt.figure()
+
+#plt.title("Average packets vs Rho")
+#plt.xlabel("rho")
+#plt.ylabel("E[N]")
+#plt.plot(rho, E_n, 'bo-')
+#plt.show()
+
+
