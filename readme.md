@@ -1,1 +1,1 @@
-To get started, type 'pip install -r requirements.txt'
+To run the simulator, type `make run`
