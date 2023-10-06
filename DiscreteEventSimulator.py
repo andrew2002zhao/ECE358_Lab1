@@ -1,7 +1,7 @@
-from math import log,e
+from math import e
 
 from numpy.random import uniform
-from numpy import array, vectorize
+from numpy import array, vectorize, log,squeeze
 
 import pandas as pd
 
@@ -18,15 +18,13 @@ def simulateExponential(rate):
         # rate must be bigger than 0
         if rate <= 0:
             return []
-        # natural logarithm
-        def _ln(x):
-            return log(x,e)
-
+      
+    
         # generate NUM_SMAPLE points from uniform distribution
         U = array(uniform(low=0.0, high=1.0, size=NUM_SAMPLE))
 
         # vectorize ln function to apply to numpy array
-        _vln = vectorize(_ln)
+        _vln = vectorize(log)
 
         # return numpy array of NUM_SAMPLE points using formula outlined in doc
         return array(-(1/rate)*_vln(1-U))
@@ -198,12 +196,10 @@ class DiscreteEventSimulator:
         if rate <= 0.0:
             return 0.0 # print error statement
         
-        def _ln(x):
-            return log(x, e)
         
         U = uniform(low=0.0, high=1.0, size=1)
 
-        result = float(-(1/rate)*_ln(1-U))
+        result = float(-(1/rate)*squeeze(log(1-U)))
         return result
     
     def getPacketLength(self, average_length=AVERAGE_LENGTH):
@@ -213,12 +209,11 @@ class DiscreteEventSimulator:
         else:
             rate = float(1/average_length) # scale parameter conversion to rate parameter
         
-        def _ln(x):
-            return log(x, e)
+
         
         U = uniform(low=0.0, high=1.0, size=1)
 
-        result = float(-(1/rate)*_ln(1-U))
+        result = float(-(1/rate)*squeeze(log(1-U)))
         return result
         
     # is_finite to determine if we are using M/M/K or M/M/1 queue
@@ -298,7 +293,7 @@ class DiscreteEventSimulator:
 
                 if not packet_queue.isQueueEmpty():
                     
-                    d_event = self.DepartureEvent(departure_time=float(departure_event.departure_time + float(packet/transmission_rate)))
+                    d_event = self.DepartureEvent(departure_time=float(departure_event.nominal_sim_time + float(packet/transmission_rate)))
                     # departure_event_queue.append(d_event)
                     # departure_event_pointer = departure_event_pointer + 1 if departure_event_pointer < len(departure_event_queue)-1 else departure_event_pointer
                     departure_event = d_event
@@ -441,20 +436,27 @@ def simulateM_M_1_K():
 
 
 # Question 1
-exp75 = simulateExponential(rate=75)
-print("Q1 mean: {} and var: {} of exponential distibution with rate: 75".format(exp75.mean(), exp75.var()))
 
+print("-----------------------------------------Question 1 START------------------------------------------\n\n")
+exp75 = simulateExponential(rate=75)
+print("Q1 mean: {} and var: {} of exponential distibution with rate: 75".format(exp75.mean(), exp75.var()) + "\n\n")
+
+print("-----------------------------------------Question 1 END------------------------------------------\n\n")
+
+print("-----------------------------------------Question 2 & 3 START------------------------------------------\n\n")
 # Question 2, 3
 simulateM_M_1()
+print("-----------------------------------------Question 2 & 3 END------------------------------------------\n\n")
 
 # Question 4
-print("-----------------------------------------Question 4 START------------------------------------------")
+print("-----------------------------------------Question 4 START------------------------------------------\n\n")
 discreteEventSimulatorQ4 = DiscreteEventSimulator(rate=exponentialRateParameter(rho=1.2), sim_time=1000)
 discreteEventSimulatorQ4.runSimulation(transmission_rate=1e6)
-print("Q4 E[N]: {}, Pidle: {}".format(discreteEventSimulatorQ4.E_n, discreteEventSimulatorQ4.P_i))
-print("-----------------------------------------Question 4 END ------------------------------------------")
+print("Q4 E[N]: {}, Pidle: {}".format(discreteEventSimulatorQ4.E_n, discreteEventSimulatorQ4.P_i) + "\n\n")
+print("-----------------------------------------Question 4 END ------------------------------------------\n\n")
 
 # Question 6
+print("-----------------------------------------Question 5 & 6 START------------------------------------------ \n\n")
 simulateM_M_1_K()
-
+print("-----------------------------------------Question 5 & 6 END------------------------------------------\n\n")
 
