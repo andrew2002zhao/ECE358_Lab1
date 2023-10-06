@@ -401,7 +401,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 
 def plot_single_graph(x, y, plot_title, x_title, y_title):
@@ -546,8 +546,8 @@ def simulateM_M_1_K():
     result.to_csv("M_M_1_K_Simulation.csv", sep=",")
    
 
-simulateM_M_1_K()
-simulateM_M_1()
+#simulateM_M_1_K()
+#simulateM_M_1()
 #discreteEventSimulator = DiscreteEventSimulator(rate=75, sim_time=100)
 #discreteEventSimulator.runSimulation(transmission_rate=1e6, is_finite=True, capacity=10)
 
