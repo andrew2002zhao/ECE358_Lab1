@@ -429,6 +429,12 @@ def simulateM_M_1_K():
     def _f(col_1, col_2):
         return 0.0 if col_1 == 0 else float(abs(col_1 - col_2)/col_1)*100
     
+    result['Percent_Error_E[N]_cap_10'] = result.apply(lambda x: _f(x['E[N]_10_1'], x['E[N]_10_2']), axis=1)
+    result['Percent_Error_P_Loss_cap_10'] = result.apply(lambda x: _f(x['P_loss_10_1'], x['P_loss_10_2']), axis=1)
+    
+    result['Percent_Error_E[N]_cap_25'] = result.apply(lambda x: _f(x['E[N]_25_1'], x['E[N]_25_2']), axis=1)
+    result['Percent_Error_P_Loss_cap_25'] = result.apply(lambda x: _f(x['P_loss_25_1'], x['P_loss_25_2']), axis=1)
+    
     result['Percent_Error_E[N]_cap_50'] = result.apply(lambda x: _f(x['E[N]_50_1'], x['E[N]_50_2']), axis=1)
     result['Percent_Error_P_Loss_cap_50'] = result.apply(lambda x: _f(x['P_loss_50_1'], x['P_loss_50_2']), axis=1)
 
