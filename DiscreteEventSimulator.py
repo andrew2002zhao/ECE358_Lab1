@@ -14,7 +14,7 @@ AVERAGE_LENGTH = 2000
 SIM_TIME = 1000
 
 
-def simulateExponential(self, rate):
+def simulateExponential(rate):
         # rate must be bigger than 0
         if rate <= 0:
             return []
